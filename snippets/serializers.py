@@ -13,8 +13,8 @@ class SnippetSerializer(serializers.Serializer):
     The syntax of declaring serializers mirrors the syntax of Django's forms very
     closely, containing similar validation flags. Some flags can control how the
     serializer is displayed in different contexts, like when rendering HTML.
-    The {'base_template': 'textarea.html'} flag is equivalent to `widget=widgets.TextArea`
-    on a Django `Form` class.
+    The `{'base_template': 'textarea.html'}` flag is equivalent to
+    `widget=widgets.TextArea` on a Django `Form` class.
 
     "Under the hood", this is what serializers are actually doing:
 
@@ -54,6 +54,7 @@ class SnippetSerializer(serializers.Serializer):
         >>> serializer.data
 
     """
+
     id = serializers.IntegerField(read_only=True)
     title = serializers.CharField(required=False, allow_blank=True, max_length=100)
     code = serializers.CharField(style={'base_template': 'textarea.html'})
@@ -87,3 +88,37 @@ class SnippetSerializer(serializers.Serializer):
         instance.style = validated_data.get('style', default=instance.style)
         instance.save()
         return instance
+
+
+class SnippetModelSerializer(serializers.ModelSerializer):
+    """A more concise, but functionally equivalent, `SnippetSerializer`.
+
+    In the above example, there is a lot of duplicated information
+    from the `Snippet` model itself. Because serializers are paired with
+    models extremely often, the `ModelSerializer` was created. This is analogous
+    to Django providing both a `Form` and a `ModelForm` class.
+
+    `ModelSerializers` aren't magic -- they just automatically determine a
+    set of fields and provide simple default implementations for `create()`
+    and `update()`.
+
+    Additionally, you can inspect all of the fields in a serializer (whether its
+    a `ModelSerializer` or a regular `Serializer) by calling `repr()` on it.
+
+    Examples:
+        >>> from snippets.serializers import SnippetSerializer
+        >>> serializer = SnippetSerializer()
+        >>> print(repr(serializer))
+        # SnippetSerializer():
+        #    id = IntegerField(label='ID', read_only=True)
+        #    title = CharField(allow_blank=True, max_length=100, required=False)
+        #    code = CharField(style={'base_template': 'textarea.html'})
+        #    linenos = BooleanField(required=False)
+        #    language = ChoiceField(choices=[('Clipper', 'FoxPro'), ...
+        #    style = ChoiceField(choices=[('autumn', 'autumn'), ...
+
+    """
+
+    class Meta:
+        model = Snippet
+        fields = ('id', 'title', 'code', 'linenos', 'language', 'style')
